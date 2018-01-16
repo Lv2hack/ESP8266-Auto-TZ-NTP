@@ -38,7 +38,6 @@
 //
 #include "debug.h"
 
-
 //
 // The name of this project.
 //
@@ -53,6 +52,14 @@ const int httpsPort = 443;
 // SHA1 fingerprint of the certificate at timezoneapi.io
 const char* fingerprint = "86 57 E6 8B 53 7F 2C 9E B1 86 0E FC 3D C4 30 B7 AE 1A 4C 0C";
 
+    //
+    // Set the intensity - valid choices include:
+    //
+    //   BRIGHT_DARKEST   = 0
+    //   BRIGHT_TYPICAL   = 2
+    //   BRIGHT_BRIGHTEST = 7
+    //
+    
 // Default brightness 
 int int_brightness = 2;
 
@@ -96,19 +103,7 @@ void setup()
     // Enable our serial port.
     Serial.begin(115200);
 
-    // One time format of SPIFFS
-    //DEBUG_LOG("Formatting SPIFFS...");
-    //SPIFFS.format();
-    //DEBUG_LOG("SPIFSS formatted please comment out this section!");
-    //delay(100000);
 
-    //
-    // Set the intensity - valid choices include:
-    //
-    //   BRIGHT_DARKEST   = 0
-    //   BRIGHT_TYPICAL   = 2
-    //   BRIGHT_BRIGHTEST = 7
-    //
     tm1637.set(BRIGHT_TYPICAL);
 
     //
@@ -278,10 +273,6 @@ void loop()
         last_read = now;
     }
 
-    //WiFiClient client = server.available();
-
-    //if (client)
-    //    processHTTPRequest(client);
 
 }
 
