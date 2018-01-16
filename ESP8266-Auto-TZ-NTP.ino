@@ -8,7 +8,6 @@
 //
 //   Alex T.
 
-
 //
 // WiFi & over the air updates
 //
