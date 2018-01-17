@@ -63,6 +63,7 @@ const char* fingerprint = "86 57 E6 8B 53 7F 2C 9E B1 86 0E FC 3D C4 30 B7 AE 1A
 // Default brightness 
 int int_brightness = 2;
 
+    
 //
 // NTP client, and UDP socket it uses.
 //
@@ -102,8 +103,7 @@ void setup()
 
     // Enable our serial port.
     Serial.begin(115200);
-
-
+    
     tm1637.set(BRIGHT_TYPICAL);
 
     //
@@ -199,8 +199,8 @@ void setup()
 //
 void loop()
 {
-    static char buf[10] = { '\0' };
     static char prev[10] = { '\0' };
+    static char buf[10] = { '\0' };
     static long last_read = 0;
     static bool flash = true;
 
@@ -230,7 +230,7 @@ void loop()
     // that we displayed last loop ..
     //
     if (strcmp(buf, prev) != 0)
-    {
+    {           
         // Update the display
         tm1637.display(0, buf[0] - '0');
         tm1637.display(1, buf[1] - '0');
@@ -241,7 +241,6 @@ void loop()
         strcpy(prev , buf);
     }
 
-
     //
     // The preceeding piece of code would
     // have ensured the display only updated
@@ -251,7 +250,7 @@ void loop()
     // value every half-second - solely so we can
     // blink the ":".
     //
-    //  Sigh
+    //  This means the display gets updated each half second
 
     long now = millis();
 
