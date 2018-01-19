@@ -60,10 +60,17 @@ const char* fingerprint = "86 57 E6 8B 53 7F 2C 9E B1 86 0E FC 3D C4 30 B7 AE 1A
     //   BRIGHT_BRIGHTEST = 7
     //
     
-// Default brightness 
+// Brightness variables
+// We're setting the brightness with a button connected to the BRT digital pin
+//
 int int_brightness = 2;
+int brtLevel = 1;  // This will be 0, 1, 2 for low med high brightness
+int brtButtonState = LOW;
+int lastButtonState = LOW;
 
-    
+unsigned long lastDebounceTime = 0;  // the last time the output pin was toggled
+unsigned long debounceDelay = 50;    // the debounce time; increase if the output flickers
+
 //
 // NTP client, and UDP socket it uses.
 //
@@ -76,8 +83,9 @@ NTPClient timeClient(ntpUDP);
 //
 #define CLK D3
 #define DIO D2
-TM1637 tm1637(CLK, DIO);
+#define BRT D1
 
+TM1637 tm1637(CLK, DIO);
 
 //
 // Called just before the date/time is updated via NTP
@@ -122,6 +130,10 @@ void setup()
 
     // We want to see ":" between the digits.
     tm1637.point(true);
+
+    //
+    // Initialize pushbutton pin as an input
+    pinMode(BRT, INPUT);
     
     //
     // Ensure our NTP-client is ready.
@@ -219,11 +231,12 @@ void loop()
     //
     int cur_hour = timeClient.getHours();
     int cur_min  = timeClient.getMinutes();
+    int cur_sec  = timeClient.getSeconds();
 
     //
     // Format them in a useful way.
     //
-    sprintf(buf, "%02d%02d", cur_hour, cur_min);
+    sprintf(buf, "%02d%02d", cur_min, cur_sec);
 
     //
     // If the current "hourmin" is different to
@@ -241,17 +254,47 @@ void loop()
         strcpy(prev , buf);
     }
 
-    //
-    // The preceeding piece of code would
-    // have ensured the display only updated
-    // when the hour/min changed.
-    //
-    // However note that we nuke the cached
-    // value every half-second - solely so we can
-    // blink the ":".
-    //
-    //  This means the display gets updated each half second
+    // Button debounce routine
+    int btnReading = digitalRead(BRT);
+    if (btnReading != lastButtonState) { lastDebounceTime = millis();  }
+    
+    if ((millis() - lastDebounceTime) > debounceDelay) {
+       if (btnReading != brtButtonState) {
+          brtButtonState = btnReading;
 
+          // change the brightness 
+          if (brtButtonState == HIGH) {
+             Serial.println("Button pushed");
+             brtLevel++;  // increment the brightness 
+             Serial.print("brtLevel = ");
+             Serial.println(brtLevel);
+          if (brtLevel > 2) { brtLevel = 0; }  // if brightness goes past 2 then reset it to zero 
+          }
+          switch (brtLevel) {
+          case 0:
+             int_brightness = BRIGHT_DARKEST;
+             break;
+          case 1:
+             int_brightness = BRIGHT_TYPICAL;
+             break;
+          case 2:
+             int_brightness = BRIGHT_BRIGHTEST;
+             break;
+          }
+          tm1637.set(int_brightness);   
+          
+          // Update the display
+          tm1637.display(0, buf[0] - '0');
+          tm1637.display(1, buf[1] - '0');
+          tm1637.display(2, buf[2] - '0');
+          tm1637.display(3, buf[3] - '0');
+       }
+    }
+       
+    lastButtonState = btnReading;
+
+    /*
+      
     long now = millis();
 
     if ((last_read == 0) ||
@@ -271,7 +314,7 @@ void loop()
         memset(prev, '\0', sizeof(prev));
         last_read = now;
     }
-
+    */
 
 }
 
