@@ -236,7 +236,7 @@ void loop()
     //
     // Format them in a useful way.
     //
-    sprintf(buf, "%02d%02d", cur_min, cur_sec);
+    sprintf(buf, "%02d%02d", cur_hour, cur_min);
 
     //
     // If the current "hourmin" is different to
@@ -262,13 +262,14 @@ void loop()
        if (btnReading != brtButtonState) {
           brtButtonState = btnReading;
 
-          // change the brightness 
+          // We've now detected a button state change (High or Low)
+          // If HIGH then change the brightness 
+          Serial.println("Button pushed");
           if (brtButtonState == HIGH) {
-             Serial.println("Button pushed");
              brtLevel++;  // increment the brightness 
              Serial.print("brtLevel = ");
              Serial.println(brtLevel);
-          if (brtLevel > 2) { brtLevel = 0; }  // if brightness goes past 2 then reset it to zero 
+             if (brtLevel > 2) { brtLevel = 0; }  // if brightness goes past 2 then reset it to zero 
           }
           switch (brtLevel) {
           case 0:
@@ -293,10 +294,9 @@ void loop()
        
     lastButtonState = btnReading;
 
-    /*
-      
+    
+    // This is the flash the colon code
     long now = millis();
-
     if ((last_read == 0) ||
             (abs(now - last_read) > 500))
     {
@@ -314,7 +314,7 @@ void loop()
         memset(prev, '\0', sizeof(prev));
         last_read = now;
     }
-    */
+    
 
 }
 
