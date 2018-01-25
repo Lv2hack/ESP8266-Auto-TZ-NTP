@@ -51,11 +51,13 @@ const int httpsPort = 443;
 // SHA1 fingerprint of the certificate at timezoneapi.io
 const char* fingerprint = "86 57 E6 8B 53 7F 2C 9E B1 86 0E FC 3D C4 30 B7 AE 1A 4C 0C";
 
-// Set the intensity - valid choices include:
-//
-//   BRIGHT_DARKEST   = 0
-//   BRIGHT_TYPICAL   = 2
-//   BRIGHT_BRIGHTEST = 7
+    //
+    // Set the intensity - valid choices include:
+    //
+    //   BRIGHT_DARKEST   = 0
+    //   BRIGHT_TYPICAL   = 2
+    //   BRIGHT_BRIGHTEST = 7
+    //
     
 // Brightness variables
 // We're setting the brightness with a button connected to the BRT digital pin
@@ -74,14 +76,18 @@ unsigned long debounceDelay = 50;    // the debounce time; increase if the outpu
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP);
 
+
 //
 // Pin definitions for TM1637 and can be changed to other ports
 //
-#define CLK D3
-#define DIO D2
+#define CLKa D3
+#define DIOa D2
+#define CLKb D5
+#define DIOb D6
 #define BRT D1
 
-TM1637 tm1637(CLK, DIO);
+TM1637 tm1637a(CLKa, DIOa);
+TM1637 tm1637b(CLKb, DIOb);
 
 //
 // Called just before the date/time is updated via NTP
@@ -108,8 +114,9 @@ void setup()
     // Enable our serial port.
     Serial.begin(115200);
     
-    tm1637.set(BRIGHT_TYPICAL);
-
+    tm1637a.set(BRIGHT_TYPICAL);
+    tm1637b.set(BRIGHT_TYPICAL);
+    
     //
     // Handle WiFi setup
     //
@@ -122,11 +129,13 @@ void setup()
     Serial.println(timeZone);
 
     // initialize the display
-    tm1637.init();
-
+    tm1637a.init();
+    tm1637b.init();
+    
     // We want to see ":" between the digits.
-    tm1637.point(true);
-
+    tm1637a.point(true);
+    tm1637b.point(false);
+    
     //
     // Initialize pushbutton pin as an input
     pinMode(BRT, INPUT);
@@ -232,20 +241,34 @@ void loop()
     //
     // Format them in a useful way.
     //
-    sprintf(buf, "%02d%02d", cur_hour, cur_min);
+    sprintf(buf, "%02d%02d%02d", cur_hour, cur_min, cur_sec);
 
     //
     // If the current "hourmin" is different to
     // that we displayed last loop ..
     //
     if (strcmp(buf, prev) != 0)
-    {           
-        // Update the display
-        tm1637.display(0, buf[0] - '0');
-        tm1637.display(1, buf[1] - '0');
-        tm1637.display(2, buf[2] - '0');
-        tm1637.display(3, buf[3] - '0');
+    {
 
+       // Invert the "show :" flag
+       flash = !flash;
+
+       // Apply it.
+       tm1637a.point(flash);
+       //tm1637b.point(flash);
+        
+        // Update the seconds display
+        //tm1637b.display(0, buf[4] - '0');
+        //tm1637b.display(1, buf[5] - '0');
+        tm1637b.display(2, buf[4] - '0');
+        tm1637b.display(3, buf[5] - '0');
+        
+        // Update the hrs:minutes display
+        tm1637a.display(0, buf[0] - '0');
+        tm1637a.display(1, buf[1] - '0');
+        tm1637a.display(2, buf[2] - '0');
+        tm1637a.display(3, buf[3] - '0');
+    
         // And cache it
         strcpy(prev , buf);
     }
@@ -278,39 +301,24 @@ void loop()
              int_brightness = BRIGHT_BRIGHTEST;
              break;
           }
-          tm1637.set(int_brightness);   
-          
+          tm1637a.set(int_brightness);   
+          tm1637b.set(int_brightness);  
+                    
           // Update the display
-          tm1637.display(0, buf[0] - '0');
-          tm1637.display(1, buf[1] - '0');
-          tm1637.display(2, buf[2] - '0');
-          tm1637.display(3, buf[3] - '0');
+          tm1637a.display(0, buf[0] - '0');
+          tm1637a.display(1, buf[1] - '0');
+          tm1637a.display(2, buf[2] - '0');
+          tm1637a.display(3, buf[3] - '0');
+
+          //tm1637b.display(0, buf[4] - '0');
+          //tm1637b.display(1, buf[5] - '0');
+          tm1637b.display(2, buf[4] - '0');
+          tm1637b.display(3, buf[5] - '0');
        }
     }
        
     lastButtonState = btnReading;
-
     
-    // This is the flash the colon code
-    long now = millis();
-    if ((last_read == 0) || (abs(now - last_read) > 500))
-    {
-        // Invert the "show :" flag
-        flash = !flash;
-
-        // Apply it.
-        tm1637.point(flash);
-
-        //
-        // Note that the ":" won't redraw unless/until you update.
-        // So we'll force that to happen by removing the cached
-        // value here.
-        //
-        memset(prev, '\0', sizeof(prev));
-        last_read = now;
-    }
-    
-
 }
 
 
