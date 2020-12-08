@@ -1,3 +1,4 @@
+//---------------------------------------------------------------------------------
 //
 //   NTP-Based Clock based on code from  https://steve.fi/Hardware/
 //
@@ -362,5 +363,3 @@ int getInternetTimezone () {
 
   return timeZone;
 }
-
-
